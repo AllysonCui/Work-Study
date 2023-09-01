@@ -1,12 +1,11 @@
 ---
-title: "Simulation of 2020 Toronto Business Licenses"
+title: "Simulation of 2022 Toronto Business Licenses"
 author: "Allyson Cui"
 format: html
 ---
 ```{r}
 #### Preamble ####
-# Purpose: Simulate data on 2022 Toronto Business Licenses and make a table of their
-# correlations.
+# Purpose: Simulate data on 2022 Toronto Business Licenses and make a table of # their correlations.
 # Author: Allyson Cui
 # Email: allyson.cui@mail.utoronto.ca
 # Date: 1 September 2023
@@ -68,6 +67,7 @@ simulated_data <- tibble(
 head(simulated_data)
 
 ```
+
 ```{r}
 # Convert category columns to character to avoid factor-related issues
 simulated_data$category <- as.character(simulated_data$category)
@@ -102,6 +102,7 @@ head(correlation_coefficients)
 
 
 ```
+
 ```{r}
 # Display the first few rows of the sorted tibble
 head(correlation_coefficients %>% arrange(category_a))
