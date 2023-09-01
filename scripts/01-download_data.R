@@ -19,6 +19,7 @@ library(tidyverse)
 library(readr)
 library(dplyr)
 
+#### Download data ####
 toronto_business_licenses <-
   # https://open.toronto.ca/dataset/municipal-licensing-and-standards-business-licences-and-permits/
   list_package_resources("57b2285f-4f80-45fb-ae3e-41a02c3a137f") |>

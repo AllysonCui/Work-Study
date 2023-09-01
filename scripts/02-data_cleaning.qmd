@@ -6,18 +6,22 @@ format: html
 
 ```{r}
 #### Preamble ####
-# Purpose: Simulate data on 2022 Toronto Business Licenses and make a table of # their correlations.
+# Purpose: Clean on 2022 Toronto Business Licenses and result in postal codes,
+# categories, and number of licensed businesses.
 # Author: Allyson Cui
 # Email: allyson.cui@mail.utoronto.ca
 # Date: 1 September 2023
-# Prerequisites: None.
+# Prerequisites: None
 ```
 
 ```{r}
+#### Workspace setup ####
 library(dplyr)
 library(readr)
 library(lubridate)
+```
 
+```{r}
 # Read in raw data
 raw_data <- read_csv("inputs/data/raw_data.csv")
 
@@ -33,7 +37,7 @@ raw_data$`Cancel.Date`[is.na(raw_data$`Cancel.Date`)] <- as.Date('3000-01-01')
 cleaned_data <- raw_data %>%
   filter(
     Issued <= as.Date("2022-12-31") | 
-    `Cancel.Date` >= as.Date("2022-01-01")
+    `Cancel.Date` >= as.Date("2022-01-01") # Only consider the businesses whose license was valid during some days in the year 2022
   ) %>%
   select(`Licence.Address.Line.3`, Category) %>% # select desired columns
   rename(

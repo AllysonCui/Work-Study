@@ -1,11 +1,10 @@
 #### Preamble ####
-# Purpose: Cleans the raw plane data recorded by two observers..... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 6 April 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
-# License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Purpose: Clean on 2022 Toronto Business Licenses and result in postal codes,
+# categories, and number of licensed businesses.
+# Author: Allyson Cui
+# Email: allyson.cui@mail.utoronto.ca
+# Date: 1 September 2023
+# Prerequisites: None
 
 #### Workspace setup ####
 library(dplyr)
@@ -28,7 +27,8 @@ raw_data$`Cancel.Date`[is.na(raw_data$`Cancel.Date`)] <- as.Date('3000-01-01')
 cleaned_data <- raw_data %>%
   filter(
     Issued <= as.Date("2022-12-31") | 
-      `Cancel.Date` >= as.Date("2022-01-01")
+      `Cancel.Date` >= as.Date("2022-01-01") # Only consider the businesses 
+    # whose license was valid during some days in the year 2022
   ) %>%
   select(`Licence.Address.Line.3`, Category) %>% # select desired columns
   rename(

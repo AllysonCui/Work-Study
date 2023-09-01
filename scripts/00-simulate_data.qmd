@@ -14,16 +14,14 @@ format: html
 
 ```{r}
 #### Workspace setup ####
-library(tidyverse)
-```
-
-```{r}
 install.packages("stringi")
 
+library(tidyverse)
+library(stringi)
 ```
 
 ```{r}
-
+#### Simulate the raw data ####
 # Number of categories and postal codes
 num_categories <- 81
 num_postal_codes <- 5779
@@ -69,6 +67,7 @@ head(simulated_data)
 ```
 
 ```{r}
+#### Analyze the data ####
 # Convert category columns to character to avoid factor-related issues
 simulated_data$category <- as.character(simulated_data$category)
 
