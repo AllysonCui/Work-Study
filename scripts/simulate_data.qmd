@@ -1,0 +1,108 @@
+---
+title: "Simulation of 2020 Toronto Business Licenses"
+author: "Allyson Cui"
+format: html
+---
+```{r}
+#### Preamble ####
+# Purpose: Simulate data on 2022 Toronto Business Licenses and make a table of their
+# correlations.
+# Author: Allyson Cui
+# Email: allyson.cui@mail.utoronto.ca
+# Date: 1 September 2023
+# Prerequisites: None.
+```
+
+```{r}
+#### Workspace setup ####
+library(tidyverse)
+```
+
+```{r}
+install.packages("stringi")
+
+```
+
+```{r}
+
+# Number of categories and postal codes
+num_categories <- 81
+num_postal_codes <- 5779
+
+# Generate random postal codes (assuming they follow a format like A1A1A1)
+generate_postal_codes <- function(n) {
+  letters <- sample(LETTERS, n, replace = TRUE)
+  numbers1 <- sample(0:9, n, replace = TRUE)
+  letters2 <- sample(LETTERS, n, replace = TRUE)
+  letters3 <- sample(LETTERS, n, replace = TRUE)
+  numbers2 <- sample(0:9, n, replace = TRUE)
+  letters4 <- sample(LETTERS, n, replace = TRUE)
+  
+  postal_codes <- paste0(letters, numbers1, letters2, letters3, numbers2, letters4)
+  return(postal_codes)
+}
+
+# Generate categories
+generate_categories <- function(n) {
+  categories <- paste0("Category ", rep(1:n, each = 1))
+  return(categories)
+}
+
+# Generate random number_licensed based on a Poisson distribution
+generate_number_licensed <- function(n) {
+  number_licensed <- rpois(n, lambda = 3)
+  return(number_licensed)
+}
+
+# Number of rows in the tibble
+n_rows <- num_postal_codes * num_categories
+
+# Generate the simulated_data tibble with string category names
+simulated_data <- tibble(
+  postal_code = rep(generate_postal_codes(num_postal_codes), each = num_categories),
+  category = rep(paste("Category", 1:num_categories), times = num_postal_codes),
+  number_licensed = generate_number_licensed(num_postal_codes * num_categories)
+)
+
+# Show the first few rows of the tibble
+head(simulated_data)
+
+```
+```{r}
+# Convert category columns to character to avoid factor-related issues
+simulated_data$category <- as.character(simulated_data$category)
+
+# Generate unique combinations, avoiding factors
+categories <- paste("Category", 1:81)
+combinations <- expand.grid(category_a = categories, category_b = categories) %>% 
+  mutate(across(c(category_a, category_b), as.character)) %>%  # Convert to character to avoid factor issues
+  filter(category_a < category_b)  # this should now work as intended
+
+# Run your correlation calculation
+correlation_coefficients <- combinations %>% 
+  rowwise() %>% 
+  mutate(correlation_coefficient = {
+    data_a <- filter(simulated_data, category == category_a)$number_licensed
+    data_b <- filter(simulated_data, category == category_b)$number_licensed
+    
+    # make sure data_a and data_b are not empty, else return NA
+    if(length(data_a) == 0 || length(data_b) == 0) {
+      return(NA)
+    }
+    
+    cor(data_a, data_b, use = "complete.obs")
+  }) %>% 
+  ungroup()
+
+# Convert to a tibble
+correlation_coefficients <- as_tibble(correlation_coefficients)
+
+# Display the first few rows
+head(correlation_coefficients)
+
+
+```
+```{r}
+# Display the first few rows of the sorted tibble
+head(correlation_coefficients %>% arrange(category_a))
+```
