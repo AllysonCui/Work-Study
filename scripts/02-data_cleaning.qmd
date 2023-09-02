@@ -51,3 +51,17 @@ cleaned_data <- raw_data %>%
 head(cleaned_data)
 ```
 
+```{r}
+# Generate all unique combinations of postal_code and category
+all_combinations <- expand_grid(
+  postal_code = unique(cleaned_data$postal_code),
+  category = unique(cleaned_data$category)
+)
+
+# Left join this with your original cleaned_data, filling in missing values with zero
+complete_cleaned_data <- left_join(all_combinations, cleaned_data, by = c("postal_code", "category")) %>%
+  replace_na(list(number_licensed = 0))
+
+# Verify that it works
+head(complete_cleaned_data)
+```

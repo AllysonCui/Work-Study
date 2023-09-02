@@ -38,5 +38,15 @@ cleaned_data <- raw_data %>%
   group_by(postal_code, category) %>%
   summarize(number_licensed = n(), .groups = 'drop') # count number of occurrences
 
+# Generate all unique combinations of postal_code and category
+all_combinations <- expand_grid(
+  postal_code = unique(cleaned_data$postal_code),
+  category = unique(cleaned_data$category)
+)
+
+# Left join this with your original cleaned_data, filling in missing values with zero
+complete_cleaned_data <- left_join(all_combinations, cleaned_data, by = c("postal_code", "category")) %>%
+  replace_na(list(number_licensed = 0))
+
 #### Save data ####
-write_csv(cleaned_data, "outputs/data/cleaned_data.csv")
+write_csv(complete_cleaned_data, "outputs/data/cleaned_data.csv")
