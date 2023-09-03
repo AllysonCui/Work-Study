@@ -1,32 +1,19 @@
----
-title: "06-hypothesis_testing"
-author: "Allyson Cui"
-format: html
----
-
-```{r}
 #### Preamble ####
 # Purpose: Find the unique pairwaise category combinations that are
-# statistically significant
+# statistically significant under alpha level of 0.05
 # Author: Allyson Cui
 # Email: allyson.cui@mail.utoronto.ca
 # Date: 1 September 2023
 # Prerequisites: None
-```
 
-```{r setup}
 #### Workspace setup ####
 library(tidyverse)
-```
 
-```{r setup}
 #### Load the Simulated Distribution and analysis data####
 setwd("/Users/jiaxincui/Work-Study")
 analysis_data <- read_csv("outputs/data/analysis_data.csv")
 simulated_distribution <- readRDS("outputs/models/simulated_distribution.rds")
-```
 
-```{r setup}
 # Function for hypothesis testing
 perform_test <- function(observed_coeff, simulated_distribution) {
   # Calculate the empirical p-value based on the simulated distribution
@@ -48,25 +35,6 @@ hypothesis_testing <- analysis_data %>%
 # At this point, 'p_value' and 'significance' should now be columns in your data frame. Let's select them.
 hypothesis_testing <- hypothesis_testing %>%
   select(category_a, category_b, correlation_coefficient, p_value, significance)
-```
 
-```{r}
-head(hypothesis_testing)
-```
-```{r}
-# Count the number of significant tests (where significance is TRUE)
-sum(hypothesis_testing$significance == TRUE)
-nrow(hypothesis_testing)
-```
-```{r}
-# Sort the tibble by the absolute value of p_value in descending order
-sorted_hypothesis_testing <- hypothesis_testing %>%
-  arrange(desc(abs(correlation_coefficient)))
-
-# Show the first few rows of the sorted tibble
-head(sorted_hypothesis_testing)
-
-```
-
-
-
+#### Save data ####
+write_csv(hypothesis_testing, "outputs/data/hypothesis_testing_result.csv")
