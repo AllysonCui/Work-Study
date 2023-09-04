@@ -1,17 +1,25 @@
 ---
-title: "Is There a Correlation Between Different Licensed Business Categories That Share One Postal Code? An Analysis from the 2022 Toronto Business Licenses"
-subtitle: "My subtitle if needed"
+title: "Is There a Correlation Between Different Licensed Business Categories That Share One Postal Code?"
+subtitle: "An Analysis from the 2022 Toronto Business Licenses"
 author: 
   - Allyson Cui
 thanks: "Code and data are available at: https://open.toronto.ca/dataset/municipal-licensing-and-standards-business-licenses-and-permits/"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
-  bookdown::pdf_document2
+  bookdown::pdf_document2:
+    latex_engine: xelatex  # xelatex is generally better for font handling
+    toc: TRUE
+    number_sections: true
+    keep_tex: true
+    citation_package: natbib
+header-includes:
+  - "\\usepackage[fontsize=10pt]{scrextend}"
 toc: TRUE
 abstract: "The clustering of different types of businesses in a localized area represents a fascinating dimension of economics, illuminating synergies between various categories within the same ecosystem. Conversely, certain business types tend to avoid each other. Utilizing data from Toronto OpenData for the year 2022, our study found that among 68 business categories, representing 3003 unique pairs, only 1% exhibited correlation coefficients greater than 0.194, with the highest correlation peaking at 0.930."
 format: pdf
 number-sections: true
 bibliography: references.bib
+sorting: nty
 ---
 
 ```{r, echo=FALSE, message=FALSE}
@@ -26,9 +34,9 @@ library(palmerpenguins)
 
 # Introduction
 
-**Background**: Geographical business clusters represent a fascinating aspect of modern economics, embodying a localized synergy among diverse business categories. These clusters often emerge as hotbeds of innovation, enhanced production, and efficient resource allocation~\cite{Lublinski2002}. However, not all business types are inclined to cluster together, leading to a complex landscape where spatial proximity does not always indicate functional interaction or collaboration. Existing literature focuses on the identification of these clusters, particularly in specialized sectors like aeronautics~\cite{Lublinski2002}. Furthermore, other works delve into how these clusters evolve their innovation capabilities, based on a model that adapts to the cluster's development stage~\cite{Bittencourt2019}. While these studies offer valuable insights, there is an evident gap in the quantitative analysis of what business types tend to co-locate and the nature of their interactions within a generalized urban setting.
+**Background**: Geographical business clusters represent a fascinating aspect of modern economics, embodying a localized synergy among diverse business categories [@CARBONARA2005213]. These clusters often emerge as hotbeds of innovation, enhanced production, and efficient resource allocation [@Lublinski2002]. However, not all business types are inclined to cluster together, leading to a complex landscape where spatial proximity does not always indicate functional interaction or collaboration. Existing literature focuses on the identification of these clusters, particularly in specialized sectors like aeronautics [@Lublinski2002]. Furthermore, other works delve into how these clusters evolve their innovation capabilities, based on a model that adapts to the cluster's development stage [@Bittencourt2019]. While these studies offer valuable insights, there is an evident gap in the quantitative analysis of what business types tend to co-locate and the nature of their interactions within a generalized urban setting.
 
-**Literature Review**: To fill this gap, the present study leverages OpenData for Toronto 2022 to undertake an exhaustive analysis of 81 prescribed business categories and their spatial relationships. By creating 3828 unique pairs of business category combinations, this research aims to scrutinize the extent to which certain categories display valid correlations in their geographic distribution. Unlike previous studies that focused primarily on specialized sectors or qualitative aspects~\cite{Lublinski2002, Bittencourt2019}, our research employs statistical methods to provide a comprehensive, data-driven perspective.
+**Literature Review**: To fill this gap, the present study leverages OpenData for Toronto 2022 to undertake an exhaustive analysis of 81 prescribed business categories and their spatial relationships. By creating 3828 unique pairs of business category combinations, this research aims to scrutinize the extent to which certain categories display valid correlations in their geographic distribution. Unlike previous studies that focused primarily on specialized sectors or qualitative aspects [@Lublinski2002, @Bittencourt2019], our research employs statistical methods to provide a comprehensive, data-driven perspective.
 
 **Research Gap**: This paper is organized as follows: the first section reviews existing literature on geographical business clusters, highlighting the methodologies employed and gaps that need to be filled. The second section describes the methodology adopted in this study, followed by a section detailing the findings. Finally, the paper concludes with a discussion of the implications of our research, and suggestions for future studies in this domain.
 
@@ -41,13 +49,15 @@ library(palmerpenguins)
 
 The pivotal variables for our research question encompass both the category of business and its geographical location. This raises questions around the definition of 'category' and the precision level of 'location' that could serve as a meaningful measure of clustering. Given that the study's focus is on licensed businesses, the most logical approach is to adopt the government's classification criteria used during the licensing process. For location, we had options ranging from city-wide data to postal codes and even street numbers. We ultimately chose postal codes as our geographical unit of interest. Cities are too broad to offer valuable insights into clustering, while street numbers may be overly specific. A single postal code typically spans an area of 0.5 to 1 square kilometer—a walkable distance for most people—and is therefore an appropriate scale for studying potential relationships between businesses within the same locale. Additionally, the temporal dimension is crucial; a business license generally has both an issue and expiration date, indicating the period during which businesses might cluster.
 
-Our data source is the "Municipal Licensing and Standards - Business Licenses and Permits" dataset, collected by Toronto's Municipal Licensing & Standards (ML&S) and available on the Toronto Open Data Portal.
+Our data source is the "Municipal Licensing and Standards - Business Licenses and Permits" dataset, collected by Toronto's Municipal Licensing & Standards (ML&S) and available on the Toronto Open Data Portal [@citedata].
+
+The project had made use of R [@citeR], and R packages "tidyverse" [@citetidyverse], "dplyr" [@citedplyr], "janitor" [@citejanitor], "knitr" [@citeknitr], "stringi" [@stringi], "readr" [@readr], "lubridate" [@lubridate], "purrr" [@purrr], "testthat" [@testthat], and "assertthat" [@assertthat].
 
 ## Data Selection and Preparation
 
 Our initial dataset contained 155,037 observations across 18 variables. These variables included the license category, business address at the postal code level, date issued, and cancel date. Out of an initial 81 categories and 16,607 postal codes, we were able to distill the dataset down to 3,919 postal codes and 68 categories by removing irrelevant or insufficient data. This included outdated licenses, postal codes featuring only one type of business, and postal codes that were too broadly defined (only first three characters available). We also removed businesses that had postal codes marked as "NA."
 
-```{r dataextract1, echo=FALSE, message=FALSE}
+```{r clean, echo=FALSE, message=FALSE}
 # Set up libraries
 library(knitr)
 library(kableExtra)
@@ -71,19 +81,21 @@ cleaned_data %>%
 
 ## Data Description
 
-Focusing on the most recent data available from the year 2022, our target dataset includes businesses with licenses that were active for any duration within that year. This means that the issue date of the license is no later than December 31, 2022, and the cancelation date is no earlier than January 1, 2022. While it's possible that the operating timelines for some businesses may not completely overlap, we consider their inclusion valuable for our analysis. We operate under the assumption that these businesses are likely to be active concurrently, given the close proximity of their operational timelines. Accordingly, you won't find a dedicated 'time' variable in our cleaned data table, referred to as Table 1.
+Focusing on the most recent data available from the year 2022, our target dataset includes businesses with licenses that were active for any duration within that year. This means that the issue date of the license is no later than December 31, 2022, and the cancelation date is no earlier than January 1, 2022. While it's possible that the operating timelines for some businesses may not completely overlap, we consider their inclusion valuable for our analysis. We operate under the assumption that these businesses are likely to be active concurrently, given the close proximity of their operational timelines. Accordingly, you won't find a dedicated 'time' variable in our cleaned data table, referred to as Table \@ref(tab:clean).
 
-After filtering out postal codes that didn't provide meaningful data for our study, we narrowed down the number of postal codes from the original 16,607 to 3,919. Subsequently, we also removed business categories not found in these 3,919 postal codes, reducing the number of categories from 81 to 68. We restructured the dataset to display the number of licenses per business category, organized by postal code. This information is presented in Table 1, where both rows and columns are sorted in ascending order.
+After filtering out postal codes that didn't provide meaningful data for our study, we narrowed down the number of postal codes from the original 16,607 to 3,919. Subsequently, we also removed business categories not found in these 3,919 postal codes, reducing the number of categories from 81 to 68. We restructured the dataset to display the number of licenses per business category, organized by postal code. This information is presented in Table \@ref(tab:clean), where both rows and columns are sorted in ascending order.
 
-It's worth noting that although the sample data in Table 1 doesn't display non-zero values, but it gives a clear representation of how the dataset is organized. You may also observe that some postal codes in the sample don't start with the letter 'M,' which typically designates areas within the Greater Toronto Area (GTA). This is because some businesses licensed by the Toronto municipal government are not headquartered within the GTA. We chose not to exclude these businesses from our analysis, as their inclusion does not adversely affect our study of category correlation. Businesses located in other regions can still contribute valuable data, as they too interact with and are influenced by neighboring businesses, some of which may also hold licenses from the Toronto municipal government.
+It's worth noting that although the sample data in Table \@ref(tab:clean) doesn't display non-zero values, but it gives a clear representation of how the dataset is organized. You may also observe that some postal codes in the sample don't start with the letter 'M,' which typically designates areas within the Greater Toronto Area (GTA). This is because some businesses licensed by the Toronto municipal government are not headquartered within the GTA. We chose not to exclude these businesses from our analysis, as their inclusion does not adversely affect our study of category correlation. Businesses located in other regions can still contribute valuable data, as they too interact with and are influenced by neighboring businesses, some of which may also hold licenses from the Toronto municipal government.
+
+\newpage
 
 # Exploratory Data Analysis
 
 Note that the data now is focusing on the postal codes which have at least two different business categories licensed.
 
-## Graph 1: Categories with the Highest Maximum Number of Licenses in a Single Postal Code
+## Figure 1: Categories with the Highest Maximum Number of Licenses in a Single Postal Code
 
-```{r dataextract2, echo=FALSE, message=FALSE}
+```{r max, fig.cap="Top 10 Categories with the Highest Maximum Number of Licenses\nin a Single Postal Code", echo=FALSE, message=FALSE}
 # Data Preparation for Max Values
 max_values <- apply(cleaned_data[-1], 2, max)
 max_values_tibble <- tibble(column_name = names(max_values), max_value = as.numeric(max_values)) %>% arrange(desc(max_value))
@@ -96,14 +108,13 @@ ggplot(top_10_max, aes(x = reorder(column_name, max_value), y = max_value)) +
   coord_flip() +
   scale_y_continuous(limits = c(0, max(top_10_max$max_value) * 1.1)) +
   labs(
-    title = "Top 10 Categories with the Highest Maximum Number of Licenses\nin a Single Postal Code",
     x = "Category",
     y = "Maximum Number of Licenses"
   ) +
   theme(plot.title = element_text(hjust = 1))
 ```
 
-The first graph provides a view of business categories that have the highest concentration within individual postal codes. This can be seen as an indicator of highly localized monopolies or clusters. For example, "Tow Truck Owner" tops the chart with a maximum of 100 licenses in a single postal code, followed by "Taxicab Owner" with 65 and "Retail Store (Food)" with 57.
+Figure \@ref(fig:max) provides a view of business categories that have the highest concentration within individual postal codes. This can be seen as an indicator of highly localized monopolies or clusters. For example, "Tow Truck Owner" tops the chart with a maximum of 100 licenses in a single postal code, followed by "Taxicab Owner" with 65 and "Retail Store (Food)" with 57.
 
 **Businesses with Large Fleets**: Businesses like tow truck and taxicab owners tend to cluster heavily in specific postal codes. This could imply the presence of depots or centralized locations for these services.
 
@@ -111,9 +122,11 @@ The first graph provides a view of business categories that have the highest con
 
 **Diverse Services**: The list includes a variety of services from automotive ("Public Garage") to food and beverages ("Eating Establishment") and even specific types of vending ("Mobile Vending").
 
-## Graph 2: Categories with the Highest Average Number of Licenses
+\newpage
 
-```{r, echo=FALSE, message=FALSE}
+## Figure 2: Categories with the Highest Average Number of Licenses
+
+```{r average, echo=FALSE, fig.cap="Top 10 Categories with the Highest Average Number of Licenses,\nIgnoring Postal Codes with No License of That Particular Category", message=FALSE}
 # Data Preparation for Mean Values
 mean_values <- apply(cleaned_data[-1], 2, function(x) mean(x[x > 0], na.rm = TRUE))
 mean_values_tibble <- tibble(column_name = names(mean_values), mean_value = as.numeric(mean_values)) %>% arrange(desc(mean_value))
@@ -126,15 +139,13 @@ ggplot(top_10_mean, aes(x = reorder(column_name, mean_value), y = mean_value)) +
   coord_flip() +
   scale_y_continuous(limits = c(0, max(top_10_mean$mean_value) * 1.1)) +
   labs(
-    title = "Top 10 Categories with the Highest Average Number of Licenses,\nIgnoring Postal Codes with No License of That Particular Category",
     x = "Category",
     y = "Average Number of Licenses"
   ) +
   theme(plot.title = element_text(hjust = 1))
-
 ```
 
-The second graph moves from extreme concentration to provide a more balanced view by considering the average number of licenses across all postal codes, excluding those where a particular category is not represented.
+Figure \@ref(fig:average) moves from extreme concentration to provide a more balanced view by considering the average number of licenses across all postal codes, excluding those where a particular category is not represented.
 
 **Consistent Players**: Categories like "Tow Truck Owner" and "Limousine Owner" appear again, but their numbers are now normalized, giving us a more generalized view of their prevalence.
 
@@ -142,9 +153,11 @@ The second graph moves from extreme concentration to provide a more balanced vie
 
 **Consumer Staples Remain**: The average number of "Retail Store (Food)" and "Eating Establishment" licenses are still relatively high, further substantiating their widespread existence across the city.
 
-## Graph 3: Categories with the Highest Total Number of Licenses
+\newpage
 
-```{r, echo=FALSE, message=FALSE}
+## Figure 3: Categories with the Highest Total Number of Licenses
+
+```{r total, fig.cap="Top 10 Categories with the Highest Total Number of Licenses\namong All Postal Codes", echo=FALSE, message=FALSE}
 # Data Preparation for Sum Values
 sum_values <- apply(cleaned_data[-1], 2, sum)
 sum_values_tibble <- tibble(column_name = names(sum_values), sum_value = as.numeric(sum_values)) %>% arrange(desc(sum_value))
@@ -157,7 +170,6 @@ ggplot(top_10_sum, aes(x = reorder(column_name, sum_value), y = sum_value)) +
   coord_flip() +
   scale_y_continuous(limits = c(0, max(top_10_sum$sum_value) * 1.1)) +
   labs(
-    title = "Top 10 Categories with the Highest Total Number of Licenses\namong All Postal Codes",
     x = "Category",
     y = "Total Number of Licenses"
   ) +
@@ -165,7 +177,7 @@ ggplot(top_10_sum, aes(x = reorder(column_name, sum_value), y = sum_value)) +
 
 ```
 
-The third graph gives an overall view by showing the total number of licenses across all postal codes for each category.
+Figure \@ref(fig:total) gives an overall view by showing the total number of licenses across all postal codes for each category.
 
 **Broad Appeal**: "Eating Establishment" and "Retail Store (Food)" lead the pack by a significant margin, suggesting that they are omnipresent and cater to a broad consumer base.
 **Essential Services**: Categories like "Personal Services Settings" and "Public Garage" indicate services that are not only essential but are also widespread.
@@ -174,9 +186,8 @@ The third graph gives an overall view by showing the total number of licenses ac
 ## Integrated Insights
 
 **Overlap and Complementarity**: Businesses like eating establishments and retail food stores appear in all graphs, suggesting that they are not just popular but also well-distributed. The clustering of these business types might suggest a complementary relationship, which could be explored further.
+
 **Market Saturation**: The high concentration of specific business types like "Tow Truck Owner" in some areas may indicate market saturation or potentially high levels of competition.
-**Policy Implications**: The prevalence of certain business types in specific postal codes could guide urban planners and policymakers in infrastructure development and zoning regulations.
-**Consumer Behavior**: High numbers of certain types of businesses in particular areas could also be reflective of the consumer behavior and needs of those areas.
 
 # Correlation Analysis
 
@@ -189,7 +200,7 @@ The correlation analysis begins with a cleaned dataset of business licenses acro
 ## Results and Interpretation
 
 ### Top 10 Highest Correlation Coefficients
-```{r dataextract, echo=FALSE, message=FALSE}
+```{r top10, echo=FALSE, message=FALSE}
 # Read the analysis data
 analysis_data <- read_csv(here::here("outputs/data/analysis_data.csv"))
 
@@ -201,9 +212,11 @@ analysis_data %>%
         linesep = "", 
         digits = c(0, 0, 5), 
         booktabs = TRUE) %>%
+  column_spec(1, width = "6cm") %>%
+  column_spec(2, width = "6cm") %>%
   kable_styling(latex_options = "HOLD_position", font_size = 10)
 ```
-The table shows the business categories with the highest correlation coefficients. Notably, the highest correlation is between "Mobile Vending (Ice Cream Truck)" and "Motorized Refreshment Vehicle Owner" at 0.93044.
+Table \@ref(tab:top10) shows the business categories with the highest correlation coefficients. Notably, the highest correlation is between "Mobile Vending (Ice Cream Truck)" and "Motorized Refreshment Vehicle Owner" at 0.93044.
 
 The business categories that appear at the top with high positive correlation coefficients generally belong to related or complementary sectors. For example, "Mobile Vending" and "Motorized Refreshment Vehicle Owner" both serve food and refreshments in a mobile setting, likely appealing to similar customer bases and benefiting from being in proximity to each other.
 
@@ -211,7 +224,7 @@ The presence of other similar pairings, such as "Taxicab Operator" and "Taxicab 
 
 ### Top 10 Lowest Correlation Coefficients
 
-```{r}
+```{r bottom10, echo=FALSE, message=FALSE}
 selected_data <- tail(analysis_data, 10)
 # Generate the table
 selected_data %>%
@@ -223,7 +236,7 @@ selected_data %>%
         booktabs = TRUE) %>%
   kable_styling(latex_options = "HOLD_position", font_size = 10)
 ```
-The table shows the business categories with the lowest correlation coefficients. Most notably, the most negative correlation exists between "Building Renovator" and "Eating Establishment," with a coefficient of -0.14225.
+Table \@ref(tab:bottom10) shows the business categories with the lowest correlation coefficients. Most notably, the most negative correlation exists between "Building Renovator" and "Eating Establishment," with a coefficient of -0.14225.
 
 On the other end of the spectrum, the business categories with the most negative correlations typically have contrasting needs or target different consumer bases. For instance, "Building Renovators" might prefer areas that are under development or renovation and may not be operational during standard business hours, whereas "Eating Establishments" would likely want stable, high-traffic areas that are already developed.
 
@@ -231,14 +244,14 @@ However, it's interesting to note that these negative correlations are not as ex
 
 ### Density Plot of Correlation Coefficients
 
-```{r, echo=FALSE, message=FALSE}
+```{r density, fig.cap="Density Plot of Correlation Coefficients", echo=FALSE, message=FALSE, fig.height=3}
 ggplot(analysis_data, aes(x = correlation_coefficient)) +
-  geom_density(fill = "blue", alpha = 0.7) +
-  labs(title = "Density Plot of Correlation Coefficients",
-       x = "Correlation Coefficient",
+  geom_density(fill='grey', alpha = 0.7) +
+  labs(x = "Correlation Coefficient",
        y = "Density")
 ```
-The density plot of correlation coefficients reveals a near-normal distribution, skewed slightly towards zero.
+
+Figure \@ref(fig:density) of correlation coefficients reveals a near-normal distribution, skewed slightly towards zero.
 
 The majority of correlation coefficients are near zero, indicating that most business categories don't have a strong inclination to co-locate or avoid each other. However, the extreme positive correlations are much more pronounced than the extreme negative ones.
 
@@ -262,7 +275,7 @@ The mean correlation coefficient is approximately 0.007, close to zero. This imp
 
 # Limitations
 
-One of the primary limitations of this study is the assumption that businesses are operational throughout the entire period of their license validity. While this simplifies the analysis, it may not accurately reflect the complexities of business operations. Another limitation arises from our focus on data from only the year 2022, ignoring the rich historical data that dates back to as early as January 1st, 1948. This temporal limitation precludes us from examining any chronological or causal relationships among businesses over time. Furthermore, our data cleaning process led to the exclusion of potentially insightful variables, such as restrictions on the license or permit, the names under which companies operate, and more granular location data at the street number level.
+One of the primary limitations of this study is the assumption that businesses are operational throughout the entire period of their license validity. While this simplifies the analysis, it may not accurately reflect the complexities of business operations. Another limitation arises from our focus on data from only the year 2022, ignoring the rich historical data that dates back to as early as January 1st, 1948. This temporal limitation precludes us from examining any chronological or causal relationships among businesses over time. Furthermore, our data cleaning process led to the exclusion of potentially insightful variables, such as restrictions on the license or permit, the names under which companies operate, and more granular location data at the street number level. Additionally, using postal codes as geographical units could either dilute or amplify the correlation effect between certain business categories [@GRUBESIC2008129].
 
 # Future Research
 
@@ -285,10 +298,9 @@ While these findings offer a starting point, much work remains to be done. Futur
 cor_matrix_df <- read_csv(here::here("outputs/data/correlation_matrix.csv"))
 
 kable(cor_matrix_df, longtable = T, booktabs = T, caption = 'Correlation Matrix') %>%
-  kable_styling(latex_options = c("repeat_header"), font_size = 7)
+  kable_styling(latex_options = c("repeat_header"), font_size = 6)
 ```
 
 \newpage
 
-# References {-}
-
+# References
