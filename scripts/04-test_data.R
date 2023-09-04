@@ -5,57 +5,65 @@
 # Date: 1 September 2023
 # Prerequisites: None
 
-#### Workspace setup ####
+#### Preamble ####
+# Install and load the testthat package
+# install.packages("testthat")
+library(testthat)
 library(dplyr)
 library(readr)
 library(lubridate)
+library(tidyverse)
+library(assertthat)
 
 #### Clean data ####
-
 # Read in raw data
+setwd("/Users/jiaxincui/Work-Study")
 raw_data <- read_csv("inputs/data/raw_data.csv")
 
-# Test: Column Classes (Initial)
-stopifnot(is.character(raw_data$Category))
-stopifnot(is.character(raw_data$`Licence.Address.Line.3`))
+# Add assertions to test if raw_data is correctly read
+assert_that(nrow(raw_data) > 0)
+assert_that(ncol(raw_data) > 0)
 
-# Convert the date columns to Date type
-raw_data$Issued <- as.Date(raw_data$Issued, format = "%Y-%m-%d")
-raw_data$`Cancel.Date` <- as.Date(raw_data$`Cancel.Date`, format = "%Y-%m-%d")
+cleaned_data <- read_csv("outputs/data/cleaned_data.csv")
 
-# Test: Column Classes (Post-conversion)
-stopifnot(is.Date(raw_data$Issued))
-stopifnot(is.Date(raw_data$`Cancel.Date`))
+# Assertions for cleaned_data
+assert_that(all(nchar(cleaned_data$postal_code) >= 6))
+assert_that(nrow(cleaned_data) == nrow(distinct(cleaned_data)))
+assert_that(!any(is.na(cleaned_data)))
+assert_that(all(sapply(cleaned_data[, -1], is.numeric)))
 
-# Check and handle NA's if necessary
-raw_data$Issued[is.na(raw_data$Issued)] <- as.Date('1900-01-01')
-raw_data$`Cancel.Date`[is.na(raw_data$`Cancel.Date`)] <- as.Date('3000-01-01')
+#### Data analysis ####
+data_for_correlation <- cleaned_data %>% select(-postal_code)
 
-# Test: Handling Missing Data
-stopifnot(all(!is.na(raw_data$Issued)))
-stopifnot(all(!is.na(raw_data$`Cancel.Date`)))
+# Calculate the correlation matrix
+cor_matrix <- cor(data_for_correlation, use = "pairwise.complete.obs")
 
-# Test: Boundary Conditions
-stopifnot(all(raw_data$Issued >= as.Date('1900-01-01')))
-stopifnot(all(raw_data$`Cancel.Date` <= as.Date('3000-01-01')))
+# Assertions for correlation matrix
+assert_that(nrow(cor_matrix) == ncol(cor_matrix))
+assert_that(all(diag(cor_matrix) == 1))
+assert_that(all(cor_matrix >= -1 & cor_matrix <= 1))
 
-# Filter, rename columns, and add number_licensed
-cleaned_data <- raw_data %>%
-  filter(
-    Issued <= as.Date("2022-12-31") | 
-      `Cancel.Date` >= as.Date("2022-01-01")
-  ) %>%
-  select(`Licence.Address.Line.3`, Category) %>%
-  rename(
-    postal_code = `Licence.Address.Line.3`,
-    category = Category
-  ) %>%
-  group_by(postal_code, category) %>%
-  summarize(number_licensed = n(), .groups = 'drop')
+# After reading your analysis_data into an R object
+analysis_data <- read_csv("outputs/data/analysis_data.csv")
 
-# Test: Number of Observations and Variables
-stopifnot(nrow(cleaned_data) <= nrow(raw_data))
-stopifnot(identical(sort(names(cleaned_data)), sort(c("postal_code", "category", "number_licensed"))))
+# Assertions for final analysis_data
 
-# Test: Duplicates
-stopifnot(nrow(cleaned_data) == nrow(distinct(cleaned_data)))
+# Check that the data frame is not empty
+assert_that(nrow(analysis_data) > 0)
+
+# Check that the number of columns is as expected (assuming you expect 3 columns: 'category_a', 'category_b', 'correlation_coefficient')
+assert_that(ncol(analysis_data) == 3)
+
+# Check that the columns are of the expected types
+assert_that(is.character(analysis_data$category_a))
+assert_that(is.character(analysis_data$category_b))
+assert_that(is.numeric(analysis_data$correlation_coefficient))
+
+# Check that correlation coefficients are within range [-1, 1]
+assert_that(all(analysis_data$correlation_coefficient >= -1 & analysis_data$correlation_coefficient <= 1))
+
+# Check for missing values
+assert_that(sum(is.na(analysis_data)) == 0)
+
+# Check for duplicates
+assert_that(nrow(analysis_data) == nrow(unique(analysis_data)))

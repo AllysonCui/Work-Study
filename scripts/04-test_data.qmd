@@ -14,6 +14,9 @@ format: html
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 #### Workspace setup ####
 library(dplyr)
 library(readr)

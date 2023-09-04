@@ -20,6 +20,12 @@ data_for_correlation <- reshaped_data %>% select(-postal_code)
 
 # Calculate correlation matrix
 cor_matrix <- cor(data_for_correlation, use = "pairwise.complete.obs")
+print(cor_matrix)
+# Convert the correlation matrix to a data frame
+cor_matrix_df <- as.data.frame(as.table(cor_matrix))
+
+# Write to CSV
+write_csv(cor_matrix_df, "outputs/data/correlation_matrix.csv")
 
 # Convert the matrix to a tibble
 cor_tibble <- as_tibble(cor_matrix, rownames = "category_a")
@@ -35,3 +41,4 @@ cor_long_sorted <- cor_long %>%
 
 #### Save data ####
 write_csv(cor_long_sorted, "outputs/data/analysis_data.csv")
+
