@@ -7,7 +7,7 @@ thanks: "Code and data are available at: https://open.toronto.ca/dataset/municip
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   bookdown::pdf_document2:
-    latex_engine: xelatex  # xelatex is generally better for font handling
+    latex_engine: xelatex
     toc: TRUE
     number_sections: true
     keep_tex: true
@@ -15,7 +15,7 @@ output:
 header-includes:
   - "\\usepackage[fontsize=10pt]{scrextend}"
 toc: TRUE
-abstract: "The clustering of different types of businesses in a localized area represents a fascinating dimension of economics, illuminating synergies between various categories within the same ecosystem. Conversely, certain business types tend to avoid each other. Utilizing data from Toronto OpenData for the year 2022, our study found that among 68 business categories, representing 3003 unique pairs, only 1% exhibited correlation coefficients greater than 0.194, with the highest correlation peaking at 0.930."
+abstract: "The clustering of different types of businesses in a localized area can provide insights into economic synergies and potential areas for policy intervention. Our study utilizes Toronto OpenData for the year 2022 to examine the relationship between 68 business categories. The findings may inform local planning decisions and offer a quantitative methodology for studying business clusters."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -27,6 +27,8 @@ sorting: nty
 #| warning: false
 #| message: false
 
+#install.packages("kableExtra")
+library(kableExtra)
 library(tidyverse)
 library(palmerpenguins)
 ```
@@ -40,7 +42,7 @@ library(palmerpenguins)
 
 **Research Gap**: This paper is organized as follows: the first section reviews existing literature on geographical business clusters, highlighting the methodologies employed and gaps that need to be filled. The second section describes the methodology adopted in this study, followed by a section detailing the findings. Finally, the paper concludes with a discussion of the implications of our research, and suggestions for future studies in this domain.
 
-**Objectives and Stucture of This Paper**: In summary, this study contributes to the existing body of research by introducing a quantitative methodology to examine the nature and extent of business clustering in a large urban area. By doing so, it offers a multi-faceted understanding of the phenomenon, adding a valuable layer of complexity to our current understanding of geographical business clusters.
+**Objectives and Stucture of This Paper**: In summary, this study contributes to the existing body of research by introducing a quantitative methodology to examine the nature and extent of business clustering in a large urban area. By doing so, it offers a multi-faceted understanding of the phenomenon, adding a valuable layer of complexity to our current understanding of geographical business clusters. The study is organized as follows: Section 2 reviews the existing literature; Section 3 describes the methodology; Section 4 presents the data and findings; and the final section discusses the implications of the study and offers suggestions for future research.
 
 
 # Data
@@ -204,13 +206,17 @@ The correlation analysis begins with a cleaned dataset of business licenses acro
 # Read the analysis data
 analysis_data <- read_csv(here::here("outputs/data/analysis_data.csv"))
 
+# Round the correlation coefficient to 2 decimal places
+analysis_data <- analysis_data %>%
+  mutate(`correlation_coefficient` = round(`correlation_coefficient`, 2))
+
 # Create a table with selected rows
 analysis_data %>%
   slice(1:10) %>%                 # Select first 10 rows
   kable(caption = "Top 10 Highest Correlation Coefficients",
         col.names = c("Category A", "Category B", "Correlation Coefficient"), 
         linesep = "", 
-        digits = c(0, 0, 5), 
+        digits = c(0, 0, 2),     # Adjusted to 2 decimal places
         booktabs = TRUE) %>%
   column_spec(1, width = "6cm") %>%
   column_spec(2, width = "6cm") %>%
@@ -264,24 +270,29 @@ This enhanced third section aims to provide a more thorough understanding of the
 ## Statistical Summary
 
 ```{r, echo=FALSE, message=FALSE}
-#install.packages("Hmisc")
-library(Hmisc)
+summary_stats_df <- read_csv(here::here("outputs/data/statistical_summary.csv"))
 
-# Generate the summary
-print(describe(analysis_data$correlation_coefficient))
+# Split the data frame into two parts: one containing the first set of columns and the other the rest
+first_half <- summary_stats_df[, 1:8]
+second_half <- summary_stats_df[, c(1, 9:ncol(summary_stats_df))]
+
+# Create the first table using kable
+kable(first_half, caption = "Statistical Summary of Correlation Coefficients (Part 1)")
+
+# Create a little space between the two tables
+cat("\\vspace{5mm}")
+
+# Create the second table using kable
+kable(second_half, caption = "Statistical Summary of Correlation Coefficients (Part 2)")
 
 ```
 The mean correlation coefficient is approximately 0.007, close to zero. This implies that high correlations are generally rare. The 95th percentile has a coefficient of 0.075, further confirming that extreme correlations are unusual.
 
-# Limitations
+# Discussion
 
 One of the primary limitations of this study is the assumption that businesses are operational throughout the entire period of their license validity. While this simplifies the analysis, it may not accurately reflect the complexities of business operations. Another limitation arises from our focus on data from only the year 2022, ignoring the rich historical data that dates back to as early as January 1st, 1948. This temporal limitation precludes us from examining any chronological or causal relationships among businesses over time. Furthermore, our data cleaning process led to the exclusion of potentially insightful variables, such as restrictions on the license or permit, the names under which companies operate, and more granular location data at the street number level. Additionally, using postal codes as geographical units could either dilute or amplify the correlation effect between certain business categories [@GRUBESIC2008129].
 
-# Future Research
-
 Future studies could significantly extend the scope and applicability of this work in several ways. First, a time-series analysis could be conducted to understand how business clusters evolve over time. This could provide insights into whether older businesses tend to attract newer ones within the same or complementary categories. Additionally, future research could incorporate variables that were excluded in this study, such as license restrictions and street-level location data, to provide a more nuanced understanding of business clustering. Moreover, understanding the role of temporal factors, like seasonality or economic cycles, could shed light on the dynamic nature of business clusters. Longitudinal studies that track these variables over time could offer invaluable insights into the external factors that influence the phenomenon of business clustering.
-
-# Conclusion
 
 In this study, we delved into the fascinating phenomenon of business clustering within the context of Toronto's licensed businesses. Using data sourced from Toronto's Open Data Portal, specifically from "Municipal Licensing and Standards - Business Licenses and Permits," we analyzed the spatial distribution of various business categories at the postal code level. Our analysis uncovered that out of 3003 unique pairs of business categories, about 1% exhibited a correlation coefficient higher than 0.194, with the highest being a remarkable 0.930. This suggests that certain types of businesses such as food-related professions tend to co-locate, possibly benefiting from shared resources, customer bases, or other synergistic effects.
 
@@ -294,12 +305,7 @@ While these findings offer a starting point, much work remains to be done. Futur
 \appendix
 
 # Appendix {-}
-```{r, echo=FALSE, message=FALSE}
-cor_matrix_df <- read_csv(here::here("outputs/data/correlation_matrix.csv"))
-
-kable(cor_matrix_df, longtable = T, booktabs = T, caption = 'Correlation Matrix') %>%
-  kable_styling(latex_options = c("repeat_header"), font_size = 6)
-```
+You may go to the 'outputs>data>correlation_matrix.csv' to review the complete list of combinations and their correlation coefficients.
 
 \newpage
 
