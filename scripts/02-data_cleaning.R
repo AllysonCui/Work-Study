@@ -16,7 +16,6 @@ library(tidyverse)
 
 #### Clean data ####
 # Read in raw data
-setwd("/Users/jiaxincui/Work-Study")
 raw_data <- read_csv("inputs/data/raw_data.csv")
 
 # Convert the date columns to Date type
@@ -40,6 +39,12 @@ cleaned_data <- raw_data %>%
   ) %>% 
   group_by(postal_code, category) %>%
   summarize(number_licensed = n(), .groups = 'drop') # count number of occurrences
+
+# Generate all unique combinations of postal_code and category
+all_combinations <- expand_grid(
+  postal_code = unique(cleaned_data$postal_code),
+  category = unique(cleaned_data$category)
+)
 
 # Left join this with your original cleaned_data, filling in missing values with zero
 complete_cleaned_data <- left_join(all_combinations, cleaned_data, by = c("postal_code", "category")) %>%

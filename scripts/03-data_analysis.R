@@ -11,9 +11,8 @@ library(tidyr)
 library(readr)
 library(purrr)
 library(tidyverse)
-
-install.packages("Hmisc")
-library(Hmisc)
+install.packages("psych")
+library(psych)
 
 #### Data analysis on correlation coefficients for each unique pairwise categories ####
 cleaned_data <- read_csv("outputs/data/cleaned_data.csv")
@@ -43,7 +42,7 @@ cor_long_sorted <- cor_long %>%
   arrange(desc(correlation_coefficient))
 
 #### Save data ####
-#write_csv(cor_long_sorted, "outputs/data/analysis_data.csv")
+write_csv(cor_long_sorted, "outputs/data/analysis_data.csv")
 
 # Generate the summary
 summary_stats <- describe(cor_long_sorted$correlation_coefficient)

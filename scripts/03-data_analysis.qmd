@@ -27,7 +27,6 @@ library(reshape2)
 ```
 
 ```{r}
-setwd("/Users/jiaxincui/Work-Study")
 cleaned_data <- read_csv("outputs/data/cleaned_data.csv")
 ```
 
@@ -61,5 +60,15 @@ head(cor_long_sorted)
 
 ```{r}
 dim(cor_long_sorted)
+```
+
+```{r}
+# Generate the summary
+summary_stats <- describe(cor_long_sorted$correlation_coefficient)
+
+# Convert the summary to a data frame for easier CSV writing
+summary_stats_df <- as.data.frame(summary_stats)
+
+head(summary_stats_df)
 ```
 

@@ -29,7 +29,6 @@ library(tidyverse)
 
 ```{r}
 # Read in raw data
-setwd("/Users/jiaxincui/Work-Study")
 raw_data <- read_csv("inputs/data/raw_data.csv")
 
 # Convert the date columns to Date type

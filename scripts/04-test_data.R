@@ -17,7 +17,6 @@ library(assertthat)
 
 #### Clean data ####
 # Read in raw data
-setwd("/Users/jiaxincui/Work-Study")
 raw_data <- read_csv("inputs/data/raw_data.csv")
 
 # Add assertions to test if raw_data is correctly read
